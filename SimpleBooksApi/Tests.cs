@@ -28,7 +28,7 @@ namespace SimpleBooksApi
 
             //Create Request
             var request = new RestRequest("/status");
-            request.AddHeader("Bearer", await GenerateAccessToken(Properties.authPath));
+            
             //Execute GET operation
             var response = await client.GetAsync<ApiStatusDTO>(request);
 
@@ -174,7 +174,7 @@ namespace SimpleBooksApi
                     errorResponse.error.Should().Be("Invalid value for query parameter 'limit'. Must be greater than 0.");
                 }
                 else if (randomLimit > 20)
-                { 
+                {
                     errorResponse.error.Should().Be("Invalid value for query parameter 'limit'. Cannot be greater than 20.");
                 }
 
@@ -194,7 +194,7 @@ namespace SimpleBooksApi
 
             //Performe GET Operation
             var response = await client.ExecuteAsync(request);
-            
+
             //Assertion
             response.StatusCode.Should().Be(HttpStatusCode.OK);
             var book = JsonSerializer.Deserialize<List<SingleBookDTO>>(response.Content);
@@ -205,17 +205,34 @@ namespace SimpleBooksApi
         [Fact]
         public async Task SubmitOrder()
         {
-            //Create RestRequest
-            var client = new RestClient(Properties.booksBaseUrl);
+            var token = await GenerateAccessToken(Properties.authPath);
 
+            //Create RestClient
+            var client = new RestClient(Properties.booksBaseUrl);
+            
+            
             //Create Request
             var request = new RestRequest("/orders");
-            
-            request.AddQueryParameter("bookId", 1);
-            request.AddQueryParameter("customerName", "Jake");
+
+            // Request Body
+            var newOrder = new NewOrderDTO
+            {
+                bookId = 1,
+                customerName = "Jake"
+            };
+
+            request.AddHeader("Authorization", token);
+            request.AddBody(newOrder);
 
             //Performe POST Operation
             var response = await client.PostAsync(request);
+            OrderDTO order = JsonSerializer.Deserialize<OrderDTO>(response.Content.ToString());
+
+            //Assererions
+            response.StatusCode.Should().Be(HttpStatusCode.Created);
+            order.created.Should().BeTrue();
+            order.orderId.Should().NotBeNull();
+            order.orderId.Should().BeOfType<string>();
         }
     }
 }
