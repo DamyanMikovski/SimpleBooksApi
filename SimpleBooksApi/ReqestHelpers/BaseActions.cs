@@ -7,19 +7,30 @@ namespace SimpleBooksApi.ReqestHelpers
 {
     public class BaseActions
     {
-        private static RestClient restClient;
+        public static string accessToken = string.Empty;
         private static string url;
 
         public async Task<string> GenerateAccessToken(string url)
-        { 
-            var request = new RestRequest(url, Method.Post);
-            request.AddHeader("Content-Type", "application/json");
-            request.AddHeader(Properties.userCredentials, DataFormat.Json);
+        {
+            if (accessToken == string.Empty)
+            {
 
-            var response = await restClient.GetAsync(request);
-            TokenDTO token = JsonConvert.DeserializeObject<TokenDTO>(response.Content.ToString());
+                var client = new RestClient(url);
+                var request = new RestRequest(url);
+                request.AddHeader("Content-Type", "application/json");
+                var a = new CredentialsDTO
+                {
+                    clientName = Properties.clientName,
+                    clientEmail = Properties.clientEmail
+                };
+                //request.AddHeader(Properties.userCredentials, DataFormat.Json);
+                request.AddBody(a);
 
-            string accessToken = token.AccessToken;
+                var response = await client.PostAsync(request);
+                AccessTokenDTO token = JsonConvert.DeserializeObject<AccessTokenDTO>(response.Content.ToString());
+
+                accessToken = token.accessToken;
+            }
 
             return accessToken;
         }

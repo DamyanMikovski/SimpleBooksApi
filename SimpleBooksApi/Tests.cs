@@ -4,12 +4,22 @@ using System.Net;
 using SimpleBooksApi.Models;
 using System.Text.Json;
 using SimpleBooksApi.Utils;
+using SimpleBooksApi.ReqestHelpers;
 
 
 namespace SimpleBooksApi
 {
-    public class Tests
+    public class Tests : BaseActions
     {
+        [Fact]
+        public async Task GenerateTokenSucssesfuly()
+        {
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Assertion
+            token.Should().NotBeNull();
+        }
+
         [Fact]
         public async Task GetApiStatus()
         {
@@ -18,8 +28,8 @@ namespace SimpleBooksApi
 
             //Create Request
             var request = new RestRequest("/status");
-
-            //Execute Get operation
+            request.AddHeader("Bearer", await GenerateAccessToken(Properties.authPath));
+            //Execute GET operation
             var response = await client.GetAsync<ApiStatusDTO>(request);
 
             //Assert
@@ -35,7 +45,7 @@ namespace SimpleBooksApi
             //Create Request
             var request = new RestRequest("/books");
 
-            //Execute Get Operation
+            //Execute GET Operation
             var response = await client.GetAsync(request);
             var booksList = JsonSerializer.Deserialize<List<BooksDTO>>(response.Content.ToString());
 
@@ -54,7 +64,7 @@ namespace SimpleBooksApi
             var request = new RestRequest("/books");
             request.AddQueryParameter("type", "fiction");
 
-            //Execute Get operation
+            //Execute GET operation
             var response = await client.ExecuteAsync<List<BooksDTO>>(request);
 
             //Assertion
@@ -76,7 +86,7 @@ namespace SimpleBooksApi
             var request = new RestRequest("/books");
             request.AddQueryParameter("limit", "3");
 
-            //Execute Get Operation
+            //Execute GET Operation
             var response = await client.ExecuteAsync<List<BooksDTO>>(request);
             var booksResponse = JsonSerializer.Deserialize<List<BooksDTO>>(response.Content.ToString());
 
@@ -96,7 +106,7 @@ namespace SimpleBooksApi
             request.AddQueryParameter("type", "fiction");
             request.AddQueryParameter("limit", "3");
 
-            //Execute Get Operation
+            //Execute GET Operation
             var response = await client.ExecuteAsync<List<BooksDTO>>(request);
 
             //Assertions
@@ -119,7 +129,7 @@ namespace SimpleBooksApi
             request.AddQueryParameter("type", "non-fiction");
             request.AddQueryParameter("limit", "3");
 
-            //Execute Get Operation
+            //Execute GET Operation
             var response = await client.ExecuteAsync<List<BooksDTO>>(request);
 
             //Assertions
@@ -148,7 +158,7 @@ namespace SimpleBooksApi
             var request = new RestRequest("/books");
             request.AddQueryParameter("limit", randomLimit.ToString());
 
-            // Execute Get Operation
+            // Execute GET Operation
             var response = await client.ExecuteAsync(request);
 
             if (randomLimit >= 0 && randomLimit <= 20)
@@ -173,7 +183,7 @@ namespace SimpleBooksApi
         }
 
         [Fact]
-        public async void GetBookById()
+        public async Task GetBookById()
         {
             //Create RestClient
             var client = new RestClient(Properties.booksBaseUrl);
@@ -182,7 +192,7 @@ namespace SimpleBooksApi
             var request = new RestRequest("/books");
             request.AddUrlSegment("id", "1");
 
-            //Performe Get Operation
+            //Performe GET Operation
             var response = await client.ExecuteAsync(request);
             
             //Assertion
@@ -190,6 +200,22 @@ namespace SimpleBooksApi
             var book = JsonSerializer.Deserialize<List<SingleBookDTO>>(response.Content);
 
             Assert.Equal("The Russian", actual: book[0].name);
+        }
+
+        [Fact]
+        public async Task SubmitOrder()
+        {
+            //Create RestRequest
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            //Create Request
+            var request = new RestRequest("/orders");
+            
+            request.AddQueryParameter("bookId", 1);
+            request.AddQueryParameter("customerName", "Jake");
+
+            //Performe POST Operation
+            var response = await client.PostAsync(request);
         }
     }
 }

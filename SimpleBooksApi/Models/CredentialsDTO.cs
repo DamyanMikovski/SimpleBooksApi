@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace SimpleBooksApi.Models
 {
-    public class TokenDTO
+    public class CredentialsDTO
     {
-        public string AccessToken { get; set; }
+        public string clientName { get; set; }
+        public string clientEmail { get; set; }
     }
 }
