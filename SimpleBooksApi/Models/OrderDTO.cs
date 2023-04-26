@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace SimpleBooksApi.Models
 {
-    public class BookOrderDTO
+    public class OrderDTO
     {
-        public int bookId { get; set; }
-        public string customerName { get; set; }
+        public bool created { get; set; }
+        public string orderId { get; set; }
     }
 }

@@ -16,5 +16,6 @@ namespace SimpleBooksApi.Utils
         public static string userCredentials = "{\"clientName\":\"" + Guid.NewGuid().ToString() + "\",\"clientEmail\":\"" + Guid.NewGuid().ToString() + "@example.com\"}";
         public static string clientName =  Guid.NewGuid().ToString();
         public static string clientEmail = Guid.NewGuid().ToString() + "@example.com";
+        public const string BEARER_TOKEN = "Bearer";
     }
 }

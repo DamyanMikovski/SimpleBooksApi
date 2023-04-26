@@ -18,13 +18,13 @@ namespace SimpleBooksApi.ReqestHelpers
                 var client = new RestClient(url);
                 var request = new RestRequest(url);
                 request.AddHeader("Content-Type", "application/json");
-                var a = new CredentialsDTO
+                var user = new CredentialsDTO
                 {
                     clientName = Properties.clientName,
                     clientEmail = Properties.clientEmail
                 };
-                //request.AddHeader(Properties.userCredentials, DataFormat.Json);
-                request.AddBody(a);
+                
+                request.AddBody(user);
 
                 var response = await client.PostAsync(request);
                 AccessTokenDTO token = JsonConvert.DeserializeObject<AccessTokenDTO>(response.Content.ToString());
