@@ -9,13 +9,16 @@ namespace SimpleBooksApi.Utils
 {
     public class Properties
     {
+        //Base URL, Base URL with Authorization
         public const string booksBaseUrl = "https://simple-books-api.glitch.me";
         public const string authPath = "https://simple-books-api.glitch.me/api-clients/";
 
         //Generating random usernam and random Email
         public static string userCredentials = "{\"clientName\":\"" + Guid.NewGuid().ToString() + "\",\"clientEmail\":\"" + Guid.NewGuid().ToString() + "@example.com\"}";
+
         public static string clientName =  Guid.NewGuid().ToString();
         public static string clientEmail = Guid.NewGuid().ToString() + "@example.com";
-        public const string BEARER_TOKEN = "Bearer";
+        
+        public const string AUTHORIZATION = "Authorization";
     }
 }

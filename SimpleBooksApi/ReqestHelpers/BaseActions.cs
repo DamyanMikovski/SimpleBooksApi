@@ -8,7 +8,6 @@ namespace SimpleBooksApi.ReqestHelpers
     public class BaseActions
     {
         public static string accessToken = string.Empty;
-        private static string url;
 
         public async Task<string> GenerateAccessToken(string url)
         {
