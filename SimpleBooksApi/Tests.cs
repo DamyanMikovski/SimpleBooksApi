@@ -306,5 +306,117 @@ namespace SimpleBooksApi
 
             response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
+
+        [Fact]
+        public async Task UpdateAnOrder()
+        {
+            //this is the OrderId that will be updated
+            string orderId = await CreateNewOrder();
+
+            //Generate Access Token
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Create RestRequest
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            //Create RestRequest
+            var request = new RestRequest($"/orders/{orderId}");
+
+            request.AddHeader(Properties.AUTHORIZATION, token);
+            request.AddJsonBody(new NewOrderDTO 
+            { 
+                customerName =  "Updated Customer Name"
+            });
+
+            var response = await client.PatchAsync(request);
+
+            //Assertion
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        }
+
+        [Fact]
+        public async Task DeleteAnOrder()
+        {
+            //this is the OrderId that will be deleted
+            string orderId = await CreateNewOrder();
+
+            //Generate Access Token
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Create RestClient
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            //Create RestRequest
+            var request = new RestRequest($"/orders/{orderId}");
+
+            request.AddHeader(Properties.AUTHORIZATION, token);
+            var response = await client.DeleteAsync(request);
+
+            //Assertion
+            response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+
+            //Check that the order no longer exists
+            var message = await GetOrderById(orderId);
+            message.Should().Be($"Order with ID {orderId} does not exist.");
+        }
+
+
+        private async Task<string> GetOrderById(string orderId)
+        {
+            //Generate Access Token
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Create RestClient
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            //Create RestRequest
+            var request = new RestRequest($"/orders/{orderId}");
+
+            //Add authorization header
+            request.AddHeader(Properties.AUTHORIZATION, token);
+
+            //Make GET request
+            var response = await client.GetAsync(request);
+
+            //Check if order exists and return message
+            if (response.StatusCode == HttpStatusCode.OK)
+            {
+                return $"Order with ID {orderId} exists.";
+            }
+            else
+            {
+                return $"Order with ID {orderId} does not exist.";
+            }
+        }
+
+
+        private async Task<string> CreateNewOrder()
+        {
+            //Generate Access Token
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Prerequesite for this test is to create New Order
+            var createOrderRequest = new RestRequest("/orders");
+
+            //Create RestRequest
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            // Request Body
+            var newOrder = new NewOrderDTO
+            {
+                bookId = 1,
+                customerName = "Jake"
+            };
+
+            createOrderRequest.AddHeader(Properties.AUTHORIZATION, token);
+            createOrderRequest.AddBody(newOrder);
+
+            //Performe POST Operation
+            var createOrder = await client.PostAsync(createOrderRequest);
+            OrderDTO order = JsonSerializer.Deserialize<OrderDTO>(createOrder.Content.ToString());
+            string orderId = order.orderId;
+
+            return orderId;
+        }
     }
 }
