@@ -18,6 +18,7 @@ namespace SimpleBooksApi
 
             //Assertion
             token.Should().NotBeNull();
+            token.Should().BeOfType<string>();
         }
 
         [Fact]
@@ -28,7 +29,7 @@ namespace SimpleBooksApi
 
             //Create Request
             var request = new RestRequest("/status");
-            
+
             //Execute GET operation
             var response = await client.GetAsync<ApiStatusDTO>(request);
 
@@ -209,8 +210,8 @@ namespace SimpleBooksApi
 
             //Create RestClient
             var client = new RestClient(Properties.booksBaseUrl);
-            
-            
+
+
             //Create Request
             var request = new RestRequest("/orders");
 
@@ -221,7 +222,7 @@ namespace SimpleBooksApi
                 customerName = "Jake"
             };
 
-            request.AddHeader("Authorization", token);
+            request.AddHeader(Properties.AUTHORIZATION, token);
             request.AddBody(newOrder);
 
             //Performe POST Operation
@@ -233,6 +234,77 @@ namespace SimpleBooksApi
             order.created.Should().BeTrue();
             order.orderId.Should().NotBeNull();
             order.orderId.Should().BeOfType<string>();
+        }
+
+        [Fact]
+        public async Task SubmitNewOrderWithMissingAuthorization()
+        {
+            var client = new RestClient(Properties.booksBaseUrl);
+            var request = new RestRequest("/orders");
+            var newOrder = new NewOrderDTO
+            {
+                bookId = 1,
+                customerName = "Jake"
+            };
+            request.AddJsonBody(newOrder);
+
+            //Execute Post Operation
+            var response = await client.ExecutePostAsync<ErrorsDTO>(request);
+            response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+
+            // Assert that the error message is correct
+            var errorResponse = JsonSerializer.Deserialize<ErrorsDTO>(response.Content);
+            errorResponse?.error.Should().Be("Missing Authorization header.");
+        }
+
+        [Fact]
+        public async Task SubmitNewOrderWithInvalidId()
+        {
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Create RestClient
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            //Create RestRequest
+            var request = new RestRequest("/orders");
+            request.AddHeader(Properties.AUTHORIZATION, token);
+            request.AddJsonBody(new NewOrderDTO
+            {
+                bookId = 0,
+                customerName = "Jake Ozie"
+            });
+
+            var response = await client.ExecutePostAsync<ErrorsDTO>(request);
+
+            //Assertions
+            response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+            var errorResponse = JsonSerializer.Deserialize<ErrorsDTO>(response.Content);
+            errorResponse.error.Should().Be("Invalid or missing bookId.");
+        }
+
+        [Fact]
+        public async Task GetAllOrders()
+        { 
+            //Generate Access Token
+            var token = await GenerateAccessToken(Properties.authPath);
+
+            //Create RestClient
+            var client = new RestClient(Properties.booksBaseUrl);
+
+            //Create RestRequest
+            var request = new RestRequest("/orders");
+            request.AddHeader(Properties.AUTHORIZATION, token);
+
+            var response = await client.ExecuteGetAsync<List<CreatedOrdersDTO>>(request);
+
+            foreach (var orders in response.Data)
+            {
+                orders.id.Should().NotBeEmpty();
+                orders.bookId.Should().NotBeEmpty();
+                orders.quantity.Should().BeGreaterThan(0);
+            }
+
+            response.StatusCode.Should().Be(HttpStatusCode.OK);
         }
     }
 }

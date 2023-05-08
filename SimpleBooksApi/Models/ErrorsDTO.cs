@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace SimpleBooksApi.Models
 {
-    internal class ErrorsDTO
+    public class ErrorsDTO
     {
         public string error { get; set; }
     }
