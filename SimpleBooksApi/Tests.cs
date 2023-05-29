@@ -11,6 +11,13 @@ namespace SimpleBooksApi
 {
     public class Tests : BaseActions
     {
+        private RestClient _client;
+        public Tests()
+        {
+            var restLibrary = new RestLibrary();
+            _client = restLibrary.RestClient;
+        }
+
         [Fact]
         public async Task GenerateTokenSucssesfuly()
         {
@@ -24,14 +31,11 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetApiStatus()
         {
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create Request
             var request = new RestRequest("/status");
 
             //Execute GET operation
-            var response = await client.GetAsync<ApiStatusDTO>(request);
+            var response = await _client.GetAsync<ApiStatusDTO>(request);
 
             //Assert
             response?.Status.Should().Be("OK");
@@ -40,14 +44,11 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetListOfBooks()
         {
-            //Create RestClien
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create Request
             var request = new RestRequest("/books");
 
             //Execute GET Operation
-            var response = await client.GetAsync(request);
+            var response = await _client.GetAsync(request);
             var booksList = JsonSerializer.Deserialize<List<BooksDTO>>(response.Content.ToString());
 
             //Assertion
@@ -58,15 +59,12 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetListOfFictionBooks()
         {
-            //Create Client
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create Request
             var request = new RestRequest("/books");
             request.AddQueryParameter("type", "fiction");
 
             //Execute GET operation
-            var response = await client.ExecuteAsync<List<BooksDTO>>(request);
+            var response = await _client.ExecuteAsync<List<BooksDTO>>(request);
 
             //Assertion
             foreach (var book in response.Data)
@@ -80,15 +78,12 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetBooksByGivenLimitNumber()
         {
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest("/books");
             request.AddQueryParameter("limit", "3");
 
             //Execute GET Operation
-            var response = await client.ExecuteAsync<List<BooksDTO>>(request);
+            var response = await _client.ExecuteAsync<List<BooksDTO>>(request);
             var booksResponse = JsonSerializer.Deserialize<List<BooksDTO>>(response.Content.ToString());
 
             //Assertions
@@ -99,16 +94,13 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetBooksByLimitAndTypeFiction()
         {
-            //Create RestClien
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest("/books");
             request.AddQueryParameter("type", "fiction");
             request.AddQueryParameter("limit", "3");
 
             //Execute GET Operation
-            var response = await client.ExecuteAsync<List<BooksDTO>>(request);
+            var response = await _client.ExecuteAsync<List<BooksDTO>>(request);
 
             //Assertions
             foreach (var book in response.Data)
@@ -122,16 +114,13 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetBooksByLimitAndTypeNonFiction()
         {
-            //Create RestClien
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest("/books");
             request.AddQueryParameter("type", "non-fiction");
             request.AddQueryParameter("limit", "3");
 
             //Execute GET Operation
-            var response = await client.ExecuteAsync<List<BooksDTO>>(request);
+            var response = await _client.ExecuteAsync<List<BooksDTO>>(request);
 
             //Assertions
             foreach (var book in response.Data)
@@ -152,15 +141,12 @@ namespace SimpleBooksApi
             Random random = new Random();
             int randomLimit = random.Next(-1, 21);
 
-            // Create RestClien
-            var client = new RestClient(Properties.booksBaseUrl);
-
             // Create RestRequest
             var request = new RestRequest("/books");
             request.AddQueryParameter("limit", randomLimit.ToString());
 
             // Execute GET Operation
-            var response = await client.ExecuteAsync(request);
+            var response = await _client.ExecuteAsync(request);
 
             if (randomLimit >= 0 && randomLimit <= 20)
             {
@@ -186,15 +172,12 @@ namespace SimpleBooksApi
         [Fact]
         public async Task GetBookById()
         {
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest("/books");
             request.AddUrlSegment("id", "1");
 
             //Performe GET Operation
-            var response = await client.ExecuteAsync(request);
+            var response = await _client.ExecuteAsync(request);
 
             //Assertion
             response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -207,10 +190,6 @@ namespace SimpleBooksApi
         public async Task SubmitOrder()
         {
             var token = await GenerateAccessToken(Properties.authPath);
-
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
 
             //Create Request
             var request = new RestRequest("/orders");
@@ -226,7 +205,7 @@ namespace SimpleBooksApi
             request.AddBody(newOrder);
 
             //Performe POST Operation
-            var response = await client.PostAsync(request);
+            var response = await _client.PostAsync(request);
             OrderDTO order = JsonSerializer.Deserialize<OrderDTO>(response.Content.ToString());
 
             //Assererions
@@ -239,7 +218,6 @@ namespace SimpleBooksApi
         [Fact]
         public async Task SubmitNewOrderWithMissingAuthorization()
         {
-            var client = new RestClient(Properties.booksBaseUrl);
             var request = new RestRequest("/orders");
             var newOrder = new NewOrderDTO
             {
@@ -249,7 +227,7 @@ namespace SimpleBooksApi
             request.AddJsonBody(newOrder);
 
             //Execute Post Operation
-            var response = await client.ExecutePostAsync<ErrorsDTO>(request);
+            var response = await _client.ExecutePostAsync<ErrorsDTO>(request);
             response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
 
             // Assert that the error message is correct
@@ -262,9 +240,6 @@ namespace SimpleBooksApi
         {
             var token = await GenerateAccessToken(Properties.authPath);
 
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest("/orders");
             request.AddHeader(Properties.AUTHORIZATION, token);
@@ -274,7 +249,7 @@ namespace SimpleBooksApi
                 customerName = "Jake Ozie"
             });
 
-            var response = await client.ExecutePostAsync<ErrorsDTO>(request);
+            var response = await _client.ExecutePostAsync<ErrorsDTO>(request);
 
             //Assertions
             response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -288,14 +263,11 @@ namespace SimpleBooksApi
             //Generate Access Token
             var token = await GenerateAccessToken(Properties.authPath);
 
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest("/orders");
             request.AddHeader(Properties.AUTHORIZATION, token);
 
-            var response = await client.ExecuteGetAsync<List<CreatedOrdersDTO>>(request);
+            var response = await _client.ExecuteGetAsync<List<CreatedOrdersDTO>>(request);
 
             foreach (var orders in response.Data)
             {
@@ -317,9 +289,6 @@ namespace SimpleBooksApi
             var token = await GenerateAccessToken(Properties.authPath);
 
             //Create RestRequest
-            var client = new RestClient(Properties.booksBaseUrl);
-
-            //Create RestRequest
             var request = new RestRequest($"/orders/{orderId}");
 
             request.AddHeader(Properties.AUTHORIZATION, token);
@@ -328,7 +297,7 @@ namespace SimpleBooksApi
                 customerName =  "Updated Customer Name"
             });
 
-            var response = await client.PatchAsync(request);
+            var response = await _client.PatchAsync(request);
 
             //Assertion
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -343,14 +312,11 @@ namespace SimpleBooksApi
             //Generate Access Token
             var token = await GenerateAccessToken(Properties.authPath);
 
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
-
             //Create RestRequest
             var request = new RestRequest($"/orders/{orderId}");
 
             request.AddHeader(Properties.AUTHORIZATION, token);
-            var response = await client.DeleteAsync(request);
+            var response = await _client.DeleteAsync(request);
 
             //Assertion
             response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -360,14 +326,10 @@ namespace SimpleBooksApi
             message.Should().Be($"Order with ID {orderId} does not exist.");
         }
 
-
         private async Task<string> GetOrderById(string orderId)
         {
             //Generate Access Token
             var token = await GenerateAccessToken(Properties.authPath);
-
-            //Create RestClient
-            var client = new RestClient(Properties.booksBaseUrl);
 
             //Create RestRequest
             var request = new RestRequest($"/orders/{orderId}");
@@ -376,7 +338,7 @@ namespace SimpleBooksApi
             request.AddHeader(Properties.AUTHORIZATION, token);
 
             //Make GET request
-            var response = await client.GetAsync(request);
+            var response = await _client.GetAsync(request);
 
             //Check if order exists and return message
             if (response.StatusCode == HttpStatusCode.OK)
@@ -389,7 +351,6 @@ namespace SimpleBooksApi
             }
         }
 
-
         private async Task<string> CreateNewOrder()
         {
             //Generate Access Token
@@ -397,9 +358,6 @@ namespace SimpleBooksApi
 
             //Prerequesite for this test is to create New Order
             var createOrderRequest = new RestRequest("/orders");
-
-            //Create RestRequest
-            var client = new RestClient(Properties.booksBaseUrl);
 
             // Request Body
             var newOrder = new NewOrderDTO
@@ -412,7 +370,7 @@ namespace SimpleBooksApi
             createOrderRequest.AddBody(newOrder);
 
             //Performe POST Operation
-            var createOrder = await client.PostAsync(createOrderRequest);
+            var createOrder = await _client.PostAsync(createOrderRequest);
             OrderDTO order = JsonSerializer.Deserialize<OrderDTO>(createOrder.Content.ToString());
             string orderId = order.orderId;
 
